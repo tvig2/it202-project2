@@ -32,13 +32,18 @@
         #list p {
             border-bottom: solid black 2px;
         }
+        
+        #map {
+            height: 400px;  /* The height is 400 pixels */
+            width: 100%;  /* The width is the width of the web page */
+       }
 	</style>
   </head>
     
   <body>
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
     <div class="container">
-      <a class="navbar-brand" href="#">Basic Notes Application</a>
+      <a class="navbar-brand" href="#">Map Application</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -77,33 +82,170 @@
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         
+        <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
 
         <script>
             
-          $(document).ready(function(){
+          var db = new Dexie("chicago_database");
+          db.version(1).stores({
+              notes: '++id,status,ward,street_address,service_request_number,creation_date,where_is_the_graffiti_located_,what_type_of_surface_is_the_graffiti_on_,completion_date,latitude,longitude'
+          });
+            
+         var markers = [];
+            
+         function initMap() {
+                 // The location of Chicago
+                 var chicago = {lat: 41.8781, lng: -87.6298};
+                 // The map, centered at Uluru
+                 var map = new google.maps.Map(
+                 document.getElementById('map'), {zoom: 11, center: chicago});
+                 createMarkers(map);
+         }
+            
+         // Removes the markers from the map, but keeps them in the array.
+         function clearMarkers() {
+            setMapOnAll(null);
+            markers = [];
+         }   
+         
+         // Sets the map on all markers in the array.
+         function setMapOnAll(map) {
+            for (var i = 0; i < markers.length; i++) {
+              markers[i].setMap(map);
+            }
+            
+         }   
+            
+         function createMarkers (map) {
+             clearMarkers();
               
+            db.notes.each(function(entry)
+            {
+                var location = {lat: parseFloat(entry.latitude), lng: parseFloat(entry.longitude) }
+      
+                var marker = new google.maps.Marker({position: location, map: map});
+                
+                console.log(location)
+
+                var infowindow = new google.maps.InfoWindow({
+                    content: entry.street_address
+                });
+
+                marker.addListener('click', function() {
+                    infowindow.open(map, marker);
+                });
+                
+                markers.push(marker);
+            });
+
+          }
+            
+          $("#searchEnter").on("click", function(){
+             initMap(); 
+          });  
+            
+          $(document).ready(function(){
               var url = "https://data.cityofchicago.org/resource/cdmx-wzbz.json";
               
-              $.get(url, function(response) {
-                  console.log(response);
+              function hideScreens() {
+                  $(".content").hide();
+              }
+              
 
-                  var data = response;
+              function loadSearchResults()
+              {
+                  $("#list").empty();
+                  
+                  var p = $("<p>");
+                  p.text("List of entries");
+                  $("#list").append(p);
+                  
+                  db.notes.each(function(entry)
+                  {
+                      console.log("here");
+                      var p = $("<p>");
+                      p.attr("data-id", entry.id);
+                      p.addClass("list-note");
+                      
+                      if(entry.completion_date == "") {
+                          p.text("Street Address: " 
+                             + entry.street_address + " | " 
+                             + "Created: " 
+                             + entry.creation_date + " | "
+                             + "Graffiti Location and Surface: " 
+                             + entry.where_is_the_graffiti_located_ + ", " + entry.what_type_of_surface_is_the_graffiti_on_ + " | " 
+                             + "Ward: " 
+                             + entry.ward + " | " 
+                             + " Status: " 
+                             + entry.status 
+                             + " | " + " Service Request #: "
+                             + entry.service_request_number);
+                      }
+                      else {
+                          p.text("Street Address: " 
+                             + entry.street_address + " | " 
+                             + "Created: " 
+                             + entry.creation_date + " | "
+                             + "Graffiti Location and Surface: " 
+                             + entry.where_is_the_graffiti_located_ + ", " + entry.what_type_of_surface_is_the_graffiti_on_ + " | " 
+                             + "Ward: " 
+                             + entry.ward + " | " 
+                             + " Status: " 
+                             + entry.status + " " + entry.completion_date 
+                             + " | " + " Service Request #: "
+                             + entry.service_request_number);
+                      }
+                      
+                      $("#list").append(p);
+                  });
+              }
+              
+              $(".nav-link").on("click", function(){
+                  hideScreens();
+                  var target = $(this).attr("href");
+                  $(target).show();
+                  
+                  if(target == "#list")
+                  {
+                      loadSearchResults();
+                  }
+              });
+              
+              // event handler
+              $("#searchEnter").on("click", function() {
+                  var ward = $("#ward").val();
+                  var status = $("#status").val();
+                  
+                  db.notes.clear();
+                  
+                  $.get(url, function(response) {
+                     
+                     console.log(response);
 
-                  $.each(data, function(i,v){
-                    console.log(i,v);
-
-                    // clone card
-                    var clone = $(".template").clone();
-                    // update values
-                    clone.find(".card-title").text(v.status);
-            
-                    clone.removeClass("template");
-
-                    // insert into DOM
-                    $("#list").append(clone);
-
-              });  
-          });
+                      var data = response;                   
+                      $.each(data, function(i,v){
+                          
+                          console.log(i,v);
+                         
+                          if(ward == v.ward && status == v.status)
+                          {
+                              if(v.completion_date)
+                              {
+                                 db.notes.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
+                                           creation_date: v.creation_date, where_is_the_graffiti_located_: v.where_is_the_graffiti_located_, 
+                                           what_type_of_surface_is_the_graffiti_on_: v.what_type_of_surface_is_the_graffiti_on_, completion_date: v.completion_date,
+                                              latitude: v.latitude, longitude: v.longitude});  
+                              }
+                              else{
+                                  db.notes.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
+                                           creation_date: v.creation_date, where_is_the_graffiti_located_: v.where_is_the_graffiti_located_, 
+                                           what_type_of_surface_is_the_graffiti_on_: v.what_type_of_surface_is_the_graffiti_on_, completion_date: "",
+                                               latitude: v.latitude, longitude: v.longitude});  
+                              }
+                          }
+                      });
+                  });
+              });
           });
 
          </script>
@@ -119,12 +261,18 @@
 	 </div>
   </div>
   <div class="content" id="detail">
-    Details
+    <h3>My Google Maps Demo</h3>
+    <!--The div element for the map -->
+    <div id="map"></div>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBMq1s3lYDV0m1qKodiJbY4wMbwXJpNo14&callback=initMap">
+    </script>
   </div>
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.min.js"></script>
+      
       
 
     <script>
@@ -142,6 +290,8 @@
 
       });
     </script>
+      
+      
 
 
   </body>
