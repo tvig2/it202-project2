@@ -128,15 +128,25 @@
                 
                 if(entry.status == "Open") {
                     var marker = new google.maps.Marker({position: location, map: map, icon: {url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"}});
+                    var info_window_message = "Street address: " + entry.street_address + " "
+                                        + "Created: " + entry.creation_date + " "
+                                        + "Location and surface: " + entry.where_is_the_graffiti_located_ + ", " + entry.what_type_of_surface_is_the_graffiti_on_ + " "
+                                        + "Status: " + entry.status + " "
+                                        + "Completion date: N/A";
                 }
                 else if (entry.status == "Completed"){
                     var marker = new google.maps.Marker({position: location, map: map, icon: {url: "http://maps.google.com/mapfiles/ms/icons/purple-dot.png"}});
+                    var info_window_message = "Street address: " + entry.street_address + " "
+                                        + "Created: " + entry.creation_date + " "
+                                        + "Location and surface: " + entry.where_is_the_graffiti_located_ + ", " + entry.what_type_of_surface_is_the_graffiti_on_ + " "
+                                        + "Status: " + entry.status + " "
+                                        + "Completion date: " + entry.completion_date;
                 }
                 
-                console.log(location)
-
+                
+                
                 var infowindow = new google.maps.InfoWindow({
-                    content: entry.street_address
+                    content: info_window_message
                 });
 
                 marker.addListener('click', function() {
@@ -280,7 +290,7 @@
     <h3>About</h3>
     <p>Chicago Graffiti Reports</p>
     <p>By: Tarush Vig</p>
-    
+    <a href="https://github.com/tvig2/it202-project2">Github link</a>
   </div>
 
 
