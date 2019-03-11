@@ -88,7 +88,7 @@
             
           var db = new Dexie("chicago_database");
           db.version(1).stores({
-              notes: '++id,status,ward,street_address,service_request_number,creation_date,where_is_the_graffiti_located_,what_type_of_surface_is_the_graffiti_on_,completion_date,latitude,longitude'
+              reports: '++id,status,ward,street_address,service_request_number,creation_date,where_is_the_graffiti_located_,what_type_of_surface_is_the_graffiti_on_,completion_date,latitude,longitude'
           });
             
          var markers = [];
@@ -119,7 +119,7 @@
          function createMarkers (map) {
              clearMarkers();
               
-            db.notes.each(function(entry)
+            db.reports.each(function(entry)
             {
                 var location = {lat: parseFloat(entry.latitude), lng: parseFloat(entry.longitude) }
                 
@@ -165,7 +165,7 @@
                   p.text("List of entries");
                   $("#list").append(p);
                   
-                  db.notes.each(function(entry)
+                  db.reports.each(function(entry)
                   {
                       console.log("here");
                       var p = $("<p>");
@@ -221,7 +221,7 @@
                   var ward = $("#ward").val();
                   var status = $("#status").val();
                   
-                  db.notes.clear();
+                  db.reports.clear();
                   
                   $.get(url, function(response) {
                      
@@ -236,13 +236,13 @@
                           {
                               if(v.completion_date)
                               {
-                                 db.notes.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
+                                 db.reports.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
                                            creation_date: v.creation_date, where_is_the_graffiti_located_: v.where_is_the_graffiti_located_, 
                                            what_type_of_surface_is_the_graffiti_on_: v.what_type_of_surface_is_the_graffiti_on_, completion_date: v.completion_date,
                                               latitude: v.latitude, longitude: v.longitude});  
                               }
                               else{
-                                  db.notes.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
+                                  db.reports.put({ward: v.ward, status: status, street_address: v.street_address, service_request_number: v.service_request_number,
                                            creation_date: v.creation_date, where_is_the_graffiti_located_: v.where_is_the_graffiti_located_, 
                                            what_type_of_surface_is_the_graffiti_on_: v.what_type_of_surface_is_the_graffiti_on_, completion_date: "",
                                                latitude: v.latitude, longitude: v.longitude});  
