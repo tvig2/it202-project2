@@ -2,4 +2,4 @@
 
 **Development notes**
 
-- Click the Enter key *twice* in order for the map to be updated with the new markers.
+- Click the Enter button *twice* in order for the map to be updated with the new markers.
