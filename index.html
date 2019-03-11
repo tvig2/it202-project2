@@ -122,8 +122,13 @@
             db.notes.each(function(entry)
             {
                 var location = {lat: parseFloat(entry.latitude), lng: parseFloat(entry.longitude) }
-      
-                var marker = new google.maps.Marker({position: location, map: map});
+                
+                if(entry.status == "Open") {
+                    var marker = new google.maps.Marker({position: location, map: map, icon: {url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"}});
+                }
+                else if (entry.status == "Completed"){
+                    var marker = new google.maps.Marker({position: location, map: map, icon: {url: "http://maps.google.com/mapfiles/ms/icons/purple-dot.png"}});
+                }
                 
                 console.log(location)
 
